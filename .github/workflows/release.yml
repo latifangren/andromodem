@@ -74,11 +74,15 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: Release ${{ steps.version.outputs.version }}
         files: |
           andromodem_${{ steps.version.outputs.version }}_linux_386
           andromodem_${{ steps.version.outputs.version }}_linux_amd64
           andromodem_${{ steps.version.outputs.version }}_linux_arm
           andromodem_${{ steps.version.outputs.version }}_linux_arm64
         generate_release_notes: true
+        draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
