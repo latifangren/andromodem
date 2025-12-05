@@ -78,24 +78,31 @@ func (c *Client) StartServer() error {
 		return err
 	}
 
-	powerOn := "true"
-	turnScreenOff := "false"
-	if c.Config.Options.TurnScreenOff {
-		turnScreenOff = "true"
-		powerOn = "false"
-	}
-
+	// Build base command
 	cmd := fmt.Sprintf(
-		"CLASSPATH=%s app_process / com.genymobile.scrcpy.Server %s tunnel_forward=true audio=false control=true send_frame_meta=false send_device_meta=true max_size=%d max_fps=%d video_bit_rate=%d power_on=%s turn_screen_off=%s",
+		"CLASSPATH=%s app_process / com.genymobile.scrcpy.Server %s tunnel_forward=true audio=false control=true send_frame_meta=false send_device_meta=true max_size=%d max_fps=%d video_bit_rate=%d",
 		c.Config.RemoteServerPath,
 		c.Config.ServerVersion,
 		c.Config.Options.MaxSize,
 		c.Config.Options.MaxFps,
 		c.Config.Options.Bitrate,
-		powerOn,
-		turnScreenOff,
 	)
+
+	// Add turn_screen_off parameter only if enabled
+	// When turn_screen_off is true, power_on should be false
+	if c.Config.Options.TurnScreenOff {
+		cmd += " turn_screen_off=true power_on=false"
+		c.Logger.Info("Turn screen off enabled", zap.Bool("turnScreenOff", true))
+	} else {
+		cmd += " power_on=true"
+	}
 	c.Logger.Debug("scrcpy server command", zap.String("cmd", cmd))
+	c.Logger.Info("Starting scrcpy server with options",
+		zap.Uint16("maxSize", c.Config.Options.MaxSize),
+		zap.Uint8("maxFps", c.Config.Options.MaxFps),
+		zap.Uint32("bitrate", c.Config.Options.Bitrate),
+		zap.Bool("turnScreenOff", c.Config.Options.TurnScreenOff),
+	)
 
 	go func() {
 		err := c.Device.RunShellLoop(c.Ctx, cmd)
@@ -111,10 +118,15 @@ func (c *Client) StartServer() error {
 	}()
 
 	// Wait for server startup
-	// TODO: Replace hardcoded sleep with proper server readiness check
-	// Current implementation uses a fixed 3-second delay which is unreliable.
-	time.Sleep(3 * time.Second)
-	c.Logger.Debug("Assumed scrcpy server started (3s delay)")
+	// When turn_screen_off is enabled, server may need more time to initialize
+	// because the screen needs to be turned off first
+	waitTime := 3 * time.Second
+	if c.Config.Options.TurnScreenOff {
+		waitTime = 5 * time.Second
+		c.Logger.Debug("Extended wait time for turn_screen_off mode", zap.Duration("waitTime", waitTime))
+	}
+	time.Sleep(waitTime)
+	c.Logger.Debug("Assumed scrcpy server started", zap.Duration("waitTime", waitTime))
 	return nil
 }
 
