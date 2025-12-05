@@ -269,6 +269,7 @@ func (h *MirroringHandler) handleWebSocketMessages(ctx context.Context, cancelCt
 							zap.Uint8("fps", setupRequest.FPS),
 							zap.Uint32("bitrate", setupRequest.Bitrate),
 							zap.Uint16("resolution", setupRequest.Resolution),
+							zap.Bool("turnScreenOff", setupRequest.TurnScreenOff),
 						)
 
 						select {

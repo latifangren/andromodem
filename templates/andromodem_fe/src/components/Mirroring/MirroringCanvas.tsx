@@ -25,6 +25,7 @@ const MirroringCanvas: React.FC<MirroringCanvasProps> = ({
     const [screenResolution, setScreenResolution] = useState<ScreenResolutionValue>(ScreenResolution[1080])
     const [bitrate, setBitrate] = useState<BitRateValue>(BitRate[8])
     const [fps, setFps] = useState<FPSValue>(FPS[30])
+    const [turnScreenOff, setTurnScreenOff] = useState(false)
 
 
 
@@ -107,6 +108,7 @@ const MirroringCanvas: React.FC<MirroringCanvasProps> = ({
                 fps,
                 resolution: screenResolution,
                 bitrate: bitrate,
+                turnScreenOff: turnScreenOff,
                 type: MessageType.SETUP
             })
         }
@@ -209,6 +211,8 @@ const MirroringCanvas: React.FC<MirroringCanvasProps> = ({
                 setBitrate={setBitrate}
                 fps={fps}
                 setFps={setFps}
+                turnScreenOff={turnScreenOff}
+                setTurnScreenOff={setTurnScreenOff}
                 handleConnect={handleConnect}
                 isDisconnecting={isDisconnecting}
                 countdown={countdown}

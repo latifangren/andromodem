@@ -17,9 +17,10 @@ type Config struct {
 }
 
 type Options struct {
-	MaxSize uint16
-	MaxFps  uint8
-	Bitrate uint32
+	MaxSize       uint16
+	MaxFps        uint8
+	Bitrate       uint32
+	TurnScreenOff bool
 }
 
 func NewDefaultConfigWithOptions(options *Options) *Config {

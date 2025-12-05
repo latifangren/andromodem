@@ -49,9 +49,10 @@ func (m *MirroringService) StartMirroring(ctx context.Context, serial string, se
 	m.mutex.RUnlock()
 
 	config := scrcpy.NewDefaultConfigWithOptions(&scrcpy.Options{
-		MaxSize: setup.Resolution,
-		MaxFps:  setup.FPS,
-		Bitrate: setup.Bitrate,
+		MaxSize:       setup.Resolution,
+		MaxFps:        setup.FPS,
+		Bitrate:       setup.Bitrate,
+		TurnScreenOff: setup.TurnScreenOff,
 	})
 
 	client := scrcpy.NewClient(ctx, device, config, m.Logger)

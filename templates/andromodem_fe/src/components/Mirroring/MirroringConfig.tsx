@@ -15,6 +15,8 @@ type MirroringConfigProps = {
     setBitrate: (value: BitRateValue) => void
     fps: FPSValue
     setFps: (value: FPSValue) => void
+    turnScreenOff: boolean
+    setTurnScreenOff: (value: boolean) => void
     handleConnect: () => void
     isDisconnecting: boolean
     countdown: number
@@ -28,6 +30,8 @@ const MirroringConfig: FC<MirroringConfigProps> = ({
     setBitrate,
     fps,
     setFps,
+    turnScreenOff,
+    setTurnScreenOff,
     handleConnect,
     isDisconnecting,
     countdown,
@@ -90,6 +94,19 @@ const MirroringConfig: FC<MirroringConfigProps> = ({
                         </option>
                     ))}
                 </select>
+            </div>
+
+            <div className="form-control text-left max-w-xs m-auto">
+                <label className="label cursor-pointer">
+                    <span className="label-text">Turn Screen Off</span>
+                    <input
+                        type="checkbox"
+                        checked={turnScreenOff}
+                        disabled={countdown > 0}
+                        onChange={(e) => setTurnScreenOff(e.target.checked)}
+                        className="checkbox checkbox-sm"
+                    />
+                </label>
             </div>
 
             <button

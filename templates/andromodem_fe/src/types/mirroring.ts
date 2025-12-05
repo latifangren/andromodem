@@ -72,6 +72,7 @@ export interface SetupMirroring {
   fps: FPSValue;
   resolution: ScreenResolutionValue;
   bitrate: BitRateValue;
+  turnScreenOff: boolean;
 }
 
 export interface UseMirroringWebSocketOptions {
