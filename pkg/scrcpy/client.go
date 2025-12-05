@@ -88,14 +88,10 @@ func (c *Client) StartServer() error {
 		c.Config.Options.Bitrate,
 	)
 
-	// Add turn_screen_off parameter only if enabled
-	// When turn_screen_off is true, power_on should be false
-	if c.Config.Options.TurnScreenOff {
-		cmd += " turn_screen_off=true power_on=false"
-		c.Logger.Info("Turn screen off enabled", zap.Bool("turnScreenOff", true))
-	} else {
-		cmd += " power_on=true"
-	}
+	// Note: turn_screen_off parameter may not be supported in scrcpy server 3.3.1
+	// We'll use ADB command to turn off screen after mirroring starts instead
+	// Always set power_on=true to ensure device is on for initial connection
+	cmd += " power_on=true"
 	c.Logger.Debug("scrcpy server command", zap.String("cmd", cmd))
 	c.Logger.Info("Starting scrcpy server with options",
 		zap.Uint16("maxSize", c.Config.Options.MaxSize),
@@ -213,6 +209,33 @@ func (c *Client) Start() error {
 	}
 	if err := c.VideoHandler.ReadDeviceInfoHeader(); err != nil {
 		return fmt.Errorf("read device info header: %w", err)
+	}
+
+	// Turn off screen using ADB if TurnScreenOff is enabled
+	// This is done after successful connection to avoid connection issues
+	if c.Config.Options.TurnScreenOff {
+		go func() {
+			// Small delay to ensure connection is stable
+			time.Sleep(500 * time.Millisecond)
+			// Use ADB command to turn off screen
+			// KEYCODE_POWER = 26, but we use input keyevent KEYCODE_SLEEP to turn off screen without locking
+			// Alternative: input keyevent 26 (KEYCODE_POWER) but that might lock the device
+			// Using "input keyevent KEYCODE_SLEEP" or "input keyevent 223" to turn off screen
+			cmd := "input keyevent KEYCODE_SLEEP"
+			_, err := c.Device.RunCommand(cmd)
+			if err != nil {
+				// Fallback to KEYCODE_POWER if KEYCODE_SLEEP doesn't work
+				c.Logger.Warn("Failed to turn off screen with KEYCODE_SLEEP, trying KEYCODE_POWER", zap.Error(err))
+				_, err = c.Device.RunCommand("input keyevent KEYCODE_POWER")
+				if err != nil {
+					c.Logger.Error("Failed to turn off screen", zap.Error(err))
+				} else {
+					c.Logger.Info("Screen turned off using KEYCODE_POWER")
+				}
+			} else {
+				c.Logger.Info("Screen turned off using KEYCODE_SLEEP")
+			}
+		}()
 	}
 
 	go func() {
