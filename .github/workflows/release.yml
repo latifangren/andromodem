@@ -27,20 +27,40 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Version: $VERSION"
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: './templates/andromodem_fe/package-lock.json'
+
     - name: Build frontend
       run: |
         cd templates/andromodem_fe
-        npm install
+        npm ci
         npm run build
         cd ../..
       env:
         VITE_ANDROMODEM_VERSION: ${{ steps.version.outputs.version }}
 
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.25.0
+        cache: true
+
+    - name: Verify frontend build exists
+      run: |
+        if [ ! -d "templates/andromodem_fe/dist" ]; then
+          echo "❌ Frontend build directory not found!"
+          exit 1
+        fi
+        echo "✅ Frontend build directory exists"
+
     - name: Build Go binaries for multiple architectures
       run: |
         TAG=${{ steps.version.outputs.version }}
         VERSION=${TAG#v}
-        go mod download
         ARCHS=("386" "amd64" "arm" "arm64")
         for arch in "${ARCHS[@]}"; do
           echo "Building for linux/$arch..."
